@@ -1,0 +1,77 @@
+generator client {
+  provider        = "prisma-client-js"
+}
+
+datasource db {
+  provider             = "mysql"
+  url                  = env("DATABASE_URL")
+}
+
+model Room {
+  id     Int        @id @default(autoincrement())
+  sid    String     @unique
+  status RoomStatus @default(CREATED)
+  set    RoomSet
+  tasks  Task[]
+  users  User[]
+}
+
+model Task {
+  id        Int        @id @default(autoincrement())
+  title     String
+  status    TaskStatus @default(CREATED)
+  active    Boolean    @default(false)
+  estimate  String?
+  roomId    Int
+  room      Room       @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  estimates Estimate[]
+}
+
+model User {
+  id        Int        @id @default(autoincrement())
+  sid       String
+  name      String
+  role      UserRole
+  roomId    Int
+  online    Boolean    @default(true)
+  room      Room       @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  estimates Estimate[]
+}
+
+model Estimate {
+  id     Int     @id @default(autoincrement())
+  userId Int
+  taskId Int
+  rate   String?
+  task   Task    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, taskId])
+}
+
+enum RoomStatus {
+  CREATED
+  IN_PROGRESS
+  DONE
+}
+
+enum RoomSet {
+  FIBONACCI
+  FIBONACCI_MOD
+  STORY_POINTS
+  T_SHIRTS
+}
+
+enum UserRole {
+  MODERATOR
+  RECIPIENT
+  VIEWER
+}
+
+enum TaskStatus {
+  CREATED
+  IN_PROGRESS
+  DISCLOSE
+  SKIPPED
+  DONE
+}
